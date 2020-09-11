@@ -58,7 +58,16 @@ export class CorongaApp extends App {
             packageValue: '',
             required: true,
             public: false,
-            i18nLabel: 'Default Message',
+            i18nLabel: 'Default Start Message',
+        });
+
+        configuration.settings.provideSetting({
+            id: 'DEFAULT_END_MESSAGE',
+            type: SettingType.STRING,
+            packageValue: 'A video chamada foi encerrada.',
+            required: true,
+            public: false,
+            i18nLabel: 'Default End Message',
         });
 
         configuration.settings.provideSetting({
