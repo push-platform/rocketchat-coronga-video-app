@@ -10,6 +10,7 @@ import { IAppInfo } from '@rocket.chat/apps-engine/definition/metadata';
 import { SettingType } from '@rocket.chat/apps-engine/definition/settings';
 
 import { CreateVideo } from './src/commands/create';
+import { CallbackEndpoint } from './src/endpoint/CallbackEndpoint';
 import { JoinEndpoint } from './src/endpoint/JoinEndpoint';
 
 export class CorongaApp extends App {
@@ -24,6 +25,7 @@ export class CorongaApp extends App {
             security: ApiSecurity.UNSECURE,
             endpoints: [
                 new JoinEndpoint(this),
+                new CallbackEndpoint(this),
             ],
         } as IApi);
     }
@@ -56,7 +58,16 @@ export class CorongaApp extends App {
             packageValue: '',
             required: true,
             public: false,
-            i18nLabel: 'Default Message',
+            i18nLabel: 'Default Start Message',
+        });
+
+        configuration.settings.provideSetting({
+            id: 'DEFAULT_END_MESSAGE',
+            type: SettingType.STRING,
+            packageValue: 'A video chamada foi encerrada.',
+            required: true,
+            public: false,
+            i18nLabel: 'Default End Message',
         });
 
         configuration.settings.provideSetting({
