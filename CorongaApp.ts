@@ -1,28 +1,56 @@
 import {
     IAppAccessors,
-    ILogger,
     IConfigurationExtend,
-    IModify,
-    IHttp,
-    IPersistence,
-    IRead,
+    IEnvironmentRead,
+    ILogger,
 } from '@rocket.chat/apps-engine/definition/accessors';
+import { ApiSecurity, ApiVisibility, IApi } from '@rocket.chat/apps-engine/definition/api';
 import { App } from '@rocket.chat/apps-engine/definition/App';
 import { IAppInfo } from '@rocket.chat/apps-engine/definition/metadata';
-import { SlashCommandContext } from '@rocket.chat/apps-engine/definition/slashcommands';
 import { SettingType } from '@rocket.chat/apps-engine/definition/settings';
 
-import { CreateVideo } from './commands/create'
-import { GetVideo } from './commands/get';
-import { EndVideo } from './commands/end';
+import { CreateVideo } from './src/commands/create';
+import { CallbackEndpoint } from './src/endpoint/CallbackEndpoint';
+import { JoinEndpoint } from './src/endpoint/JoinEndpoint';
+
 export class CorongaApp extends App {
     constructor(info: IAppInfo, logger: ILogger, accessors: IAppAccessors) {
         super(info, logger, accessors);
     }
 
+    public async initialize(configurationExtend: IConfigurationExtend, environmentRead: IEnvironmentRead): Promise<void> {
+        await this.extendConfiguration(configurationExtend);
+        await configurationExtend.api.provideApi({
+            visibility: ApiVisibility.PUBLIC,
+            security: ApiSecurity.UNSECURE,
+            endpoints: [
+                new JoinEndpoint(this),
+                new CallbackEndpoint(this),
+            ],
+        } as IApi);
+    }
+
     protected async extendConfiguration(configuration: IConfigurationExtend) {
 
-        const app = this;
+        configuration.settings.provideSetting({
+            id: 'app_version',
+            type: SettingType.STRING,
+            packageValue: this.getVersion(),
+            required: false,
+            public: false,
+            hidden: true,
+            i18nLabel: 'App Version',
+        });
+
+        configuration.settings.provideSetting({
+            id: 'app_id',
+            type: SettingType.STRING,
+            packageValue: this.getID(),
+            required: false,
+            public: false,
+            hidden: true,
+            i18nLabel: 'App Id',
+        });
 
         configuration.settings.provideSetting({
             id: 'DEFAULT_MESSAGE',
@@ -30,8 +58,17 @@ export class CorongaApp extends App {
             packageValue: '',
             required: true,
             public: false,
-            i18nLabel: 'Default Message',
-        })
+            i18nLabel: 'Default Start Message',
+        });
+
+        configuration.settings.provideSetting({
+            id: 'DEFAULT_END_MESSAGE',
+            type: SettingType.STRING,
+            packageValue: 'A video chamada foi encerrada.',
+            required: true,
+            public: false,
+            i18nLabel: 'Default End Message',
+        });
 
         configuration.settings.provideSetting({
             id: 'bigbluebutton_server',
@@ -39,8 +76,8 @@ export class CorongaApp extends App {
             packageValue: '',
             required: true,
             public: false,
-            i18nLabel: 'Default Message',
-        })
+            i18nLabel: 'Video Conference Base URL',
+        });
 
         configuration.settings.provideSetting({
             id: 'bigbluebutton_sharedSecret',
@@ -48,8 +85,8 @@ export class CorongaApp extends App {
             packageValue: '',
             required: true,
             public: false,
-            i18nLabel: 'Default Message',
-        })
+            i18nLabel: 'BBB API Secret',
+        });
 
         configuration.settings.provideSetting({
             id: 'uniqueID',
@@ -57,13 +94,20 @@ export class CorongaApp extends App {
             packageValue: '',
             required: true,
             public: false,
-            i18nLabel: 'Default Message',
-        })
+            i18nLabel: 'Unique ID',
+        });
 
+        configuration.settings.provideSetting({
+            id: 'callback_url',
+            type: SettingType.STRING,
+            packageValue: '',
+            required: true,
+            public: false,
+            i18nLabel: 'Callback URL',
+        });
 
         configuration.slashCommands.provideSlashCommand(CreateVideo);
-        configuration.slashCommands.provideSlashCommand(EndVideo);
-        configuration.slashCommands.provideSlashCommand(GetVideo);
 
     }
+
 }
